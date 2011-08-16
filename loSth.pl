@@ -1,5 +1,6 @@
 #!/usr/bin/perl
 #use warnings;
+use strict;
 
 our @STACK;
 our %hash;
@@ -12,11 +13,12 @@ sub spop;
 sub execute;
 sub seval;
 
-$DBG++;
+our $DBG++;
 
-$pre{'+'}='$n1=spop; $n2=spop; spush $n1 + $n2;';
+$pre{'+'}='my $n1=spop; my $n2=spop; spush $n1 + $n2;';
 $pre{'p'}='print spop';
 $hash{'inc'}="1 +";
+$hash{'loop'}="loop";
 while(<>){
 	seval $_	
 
@@ -25,12 +27,13 @@ while(<>){
 
 
 sub isnum {
-	$value = shift;
+	my $value = shift;
 	return $value =~ /^[0-9]/;
 }
 
 sub interpret {
-	$token = shift;
+	my $token = shift;
+	print "DBG interpret $token\n" if $DBG;
 	if (!isnum $token){
 		execute $token;
 	}else{
@@ -39,7 +42,8 @@ sub interpret {
 }
 
 sub spush {
-	$value = shift;
+	my $value = shift;
+	print "DBG spush $value\n";
 	push @STACK, $value;
 }
 
@@ -50,10 +54,10 @@ sub spop {
 sub execute {
 	my $name = shift;
 	if ( $hash{$name} ne '' ){
-		print "SEVAL" if $DBG;
+		print "DBG seval $name $hash{$name}\n" if $DBG;
 		seval $hash{$name};
 	}else{	
-		print "\nEVAL $name $pre{$name}\n" if $DBG;
+		print "DBG eval $name $pre{$name}\n" if $DBG;
 		eval $pre{$name};
 	}
 }
@@ -61,8 +65,9 @@ sub execute {
 sub seval {
 	my $code = shift;
 
-	@tokens = split /\s+/, $code;
-	foreach $token (@tokens){
+	my @tokens = split /\s+/, $code;
+	print "DBG tokens ",join ":",@tokens,"\n" if $DBG;
+	foreach my $token (@tokens){
 		interpret $token;
 	}
 }
